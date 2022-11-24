@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<comment>System library strings</comment>
+
+	<!-- Several widely used tokens. -->
+	
+	<entry key="token-Asc">Asc</entry>
+	<entry key="token-Counting">Counting</entry>
+	<entry key="token-Day">Day</entry>
+	<entry key="token-Days">Days</entry>
+	<entry key="token-Desc">Desc</entry>
+	<entry key="token-Elapsed">Elapsed</entry>
+	<entry key="token-End">End</entry>
+	<entry key="token-Estimated">Estimated</entry>
+	<entry key="token-Exit">Exit</entry>
+	<entry key="token-From">From</entry>
+	<entry key="token-Hour">Hour</entry>
+	<entry key="token-Hours">Hours</entry>
+	<entry key="token-Line">Line</entry>
+	<entry key="token-Minute">Minute</entry>
+	<entry key="token-Minutes">Minutes</entry>
+	<entry key="token-No">No</entry>
+	<entry key="token-Of">of</entry>
+	<entry key="token-Processed">Processed</entry>
+	<entry key="token-Processing">Processing</entry>
+	<entry key="token-Purge">Purge</entry>
+	<entry key="token-Remaining">Remaining</entry>
+	<entry key="token-Row">Row</entry>
+	<entry key="token-Second">Second</entry>
+	<entry key="token-Seconds">Seconds</entry>
+	<entry key="token-Start">Start</entry>
+	<entry key="token-Started">Started</entry>
+	<entry key="token-Time">Time</entry>
+	<entry key="token-To">To</entry>
+	<entry key="token-Yes">Yes</entry>
+	
+	<!-- Standard buttons. -->
+
+	<entry key="button-Accept">Accept</entry>
+	<entry key="button-Apply">Apply</entry>
+	<entry key="button-Browse">Browse</entry>
+	<entry key="button-Cancel">Cancel</entry>
+	<entry key="button-Chart">Chart</entry>
+	<entry key="button-Create">Create</entry>
+	<entry key="button-Close">Close</entry>
+	<entry key="button-Columns">Columns</entry>
+	<entry key="button-Delete">Delete</entry>
+	<entry key="button-Download">Download</entry>
+	<entry key="button-Finish">Finish</entry>
+	<entry key="button-Ignore">Ignore</entry>
+	<entry key="button-Load">Load</entry>
+	<entry key="button-Next">Next</entry>
+	<entry key="button-No">No</entry>
+	<entry key="button-Ok">Ok</entry>
+	<entry key="button-Open">Open</entry>
+	<entry key="button-Previous">Previous</entry>
+	<entry key="button-Purge">Purge</entry>
+	<entry key="button-Remove">Remove</entry>
+	<entry key="button-Reset">Reset</entry>
+	<entry key="button-Retry">Retry</entry>
+	<entry key="button-Select">Select</entry>
+	<entry key="button-Start">Start</entry>
+	<entry key="button-Yes">Yes</entry>
+	
+	<!-- Time units descriptions. -->
+
+	<entry key="unit-Tick">Tick</entry>
+	<entry key="unit-Millisecond">Milli</entry>
+	<entry key="unit-Second">Sec</entry>
+	<entry key="unit-Minute">Min</entry>
+	<entry key="unit-Hour">Hour</entry>
+	<entry key="unit-Day">Day</entry>
+	<entry key="unit-Week">Week</entry>
+	<entry key="unit-Month">Month</entry>
+	<entry key="unit-Year">Year</entry>
+	
+	<!-- Standard fields -->
+	
+	<entry key="field-RowNumHeader">Row</entry>
+	<entry key="field-RowNumLabel">Row number</entry>
+	<entry key="field-RowNumTitle">Row number</entry>
+	
+	<!-- Task progress -->
+
+	<entry key="task-start-time">Start time</entry>
+	<entry key="task-current-time">Current time</entry>
+	<entry key="task-end-time">End time</entry>
+	<entry key="task-elapsed-duration">Elapsed duration</entry>
+	<entry key="task-expected-duration">Expected duration</entry>
+	<entry key="task-work-progress">Work progress</entry>
+	<entry key="task-work-of">of</entry>
+
+
+
+
+
+
+	<!-- Pending -->
+	
+	
+	<!-- Task messages and tool tips. -->
+	
+	<entry key="task-Exception">Task exception detail information</entry>
+
+	<entry key="tooltip-CancelTask">Cancel (stop) the current task</entry>
+	<entry key="tooltip-RemoveTask">Close and remove the current task</entry>
+	<entry key="tooltip-ErrorInfo">View detailed error information</entry>
+	<entry key="tooltip-RemoveInactive">Remove all inactive tasks</entry>
+	<entry key="tooltip-StartNotRunning">Start all tasks not in running state</entry>
+	<entry key="tooltip-StartTask">Start the current task</entry>
+	<entry key="tooltip-CancelAllRunning">Cancel all running tasks</entry>
+	<entry key="tooltip-CloseTaskFrame">Close the task frame if no tasks are running</entry>
+	
+	<entry key="task-CanCloseTitle">Task running check</entry>
+	<entry key="task-CanCloseMessage">There are tasks still running, stop them or wait terminated.</entry>
+	<entry key="task-Parallel">Parallel processing...</entry>
+	
+	<!-- Chart strings. -->
+	
+	<entry key="tooltip-RemoveChart">Remove chart</entry>
+	<entry key="tooltip-ScrollBack">Scroll back</entry>
+	<entry key="tooltip-ScrollFront">Scroll front</entry>
+	<entry key="tooltip-ScrollEnd">Scroll to the end</entry>
+	<entry key="tooltip-ScrollStart">Scroll to the begining</entry>
+	<entry key="tooltip-ZoomIn">Zoom in</entry>
+	<entry key="tooltip-ZoomOut">Zoom out</entry>
+	
+	<!-- Default strings and titles. -->
+	
+	<entry key="default-RecordSelection">Record selection</entry>
+	
+	<!-- Field validation. -->
+	
+	<entry key="field-ValidType">Value type {0} is not equal than field type {1}</entry>
+	<entry key="field-ValidMax">Value {0} is greater than {1}</entry>
+	<entry key="field-ValidMin">Value {0} is less than {1}</entry>
+	<entry key="field-ValidPossible">Value {0} is not in the list of possible values</entry>
+	<entry key="field-ValidEmpty">A non-empty value is required for this field</entry>
+	<entry key="field-ValidNull">A not null value is required for this field</entry>
+	
+	<!-- Field properties. -->
+
+	<entry key="field-Index">Index</entry>
+	<entry key="field-Group">Group</entry>
+	<entry key="field-GroupIndex">Group index</entry>
+	<entry key="field-Name">Name</entry>
+	<entry key="field-Alias">Alias</entry>
+	<entry key="field-Header">Header</entry>
+	<entry key="field-Title">Title</entry>
+	<entry key="field-Type">Type</entry>
+	<entry key="field-Length">Length</entry>
+	<entry key="field-Decimals">Decimals</entry>
+	<entry key="field-Asc">Asc/Desc</entry>
+	
+	<!-- Table strings. -->
+
+	<!-- Columns pane. -->
+	
+	<entry key="colPane-ButtonLeftTooltip">Move the selected field to unselected</entry>
+	<entry key="colPane-ButtonRightTooltip">Move the unselected field to selected</entry>
+	<entry key="colPane-ButtonUpTooltip">Move the selected field up</entry>
+	<entry key="colPane-ButtonDownTooltip">Move the selected field down</entry>
+	
+	<entry key="colPane-ButtonAscText">Asc</entry>
+	<entry key="colPane-ButtonAscTooltip">Set the field to be sorted ascending</entry>
+	<entry key="colPane-ButtonDescText">Desc</entry>
+	<entry key="colPane-ButtonDescTooltip">Set the field to be sorted descending</entry>
+	
+	<entry key="colPane-SelectTableFields">Select table fields</entry>
+	<entry key="colPane-DefineTableOrder">Define table order</entry>
+	
+	<entry key="colPane-AvailableFields">Available fields</entry>
+	<entry key="colPane-SelectedFields">Selected fields</entry>
+	
+	<entry key="colPane-TitleSelection">Select the columns to show in the table</entry>
+	<entry key="colPane-TitleOrder">Select the columns to apply the order</entry>
+	
+	<!-- Tab strings. -->
+	
+	<entry key="tab-Close">Close tab</entry>
+	<entry key="tab-Dock">Dock tab</entry>
+	
+	<!-- General security messages. -->
+	
+	<entry key="security-AccessToFileDenied">Access to file denied.</entry>
+	
+	<!-- FileChooser -->
+	
+	<entry key="fileChooser-InvalidFileName">Invalid file name: {0}</entry>
+	<entry key="fileChooser-ConfirmSaveTitle">Confirm save</entry>
+	<entry key="fileChooser-ConfirmSaveText">{0} exists. Replace it?</entry>
+	<entry key="fileChooser-OpenNotExists">{0} does not exist. Choose an existing file.</entry>
+	
+</properties>
