@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * 
- */
 package com.msfx.lib.fx;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +28,7 @@ import java.util.TimerTask;
 import com.msfx.lib.task.ExecPool;
 import com.msfx.lib.task.Monitor;
 import com.msfx.lib.task.TaskProgress;
+import com.msfx.lib.util.Numbers;
 import com.msfx.lib.util.Strings;
 import com.msfx.lib.util.res.StringRes;
 
@@ -43,14 +43,11 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 
 /**
  * A layout component that displays the progress of a multi-level task.
@@ -82,6 +79,8 @@ public class PaneProgress {
 	private Button buttonStart = null;
 	/** Button cancel. */
 	private Button buttonCancel = null;
+	/** Button error. */
+	private Button buttonError = null;
 	/** Button remove. */
 	private Button buttonRemove = null;
 
@@ -96,7 +95,7 @@ public class PaneProgress {
 	private TimerReport timerTask;
 
 	/** Parent padding. */
-	private final double padding;
+	private final double pad;
 
 	/** External execution pool. */
 	private ExecPool pool;
@@ -116,12 +115,12 @@ public class PaneProgress {
 	 * Constructor that creates a progress pane to display the performance of the progress task.
 	 * @param task    The progress task.
 	 * @param timeout The timeout to refresh the monitor.
-	 * @param padding Padding.
+	 * @param pad     Padding.
 	 */
-	public PaneProgress(TaskProgress task, int timeout, double padding) {
+	public PaneProgress(TaskProgress task, int timeout, double pad) {
 		this.task = task;
 		this.timeout = timeout;
-		this.padding = padding;
+		this.pad = pad;
 		layoutComponents();
 	}
 	/**
@@ -149,94 +148,79 @@ public class PaneProgress {
 
 		Monitor pm = task.getMonitor();
 
-		Insets paddingLabel = new Insets(0, padding, 0, padding);
+		Insets paddingLabel = new Insets(0, pad, 0, pad);
 		Border borderLabel = Border.stroke(Color.rgb(200, 200, 200));
 		int row = 0;
 
+		/* Two columns, left 75% and right 25%. */
+		
+		ColumnConstraints ccLeft = new ColumnConstraints();
+		ccLeft.percentWidthProperty().set(75);
+		ColumnConstraints ccright = new ColumnConstraints();
+		ccright.percentWidthProperty().set(25);
+		root.getColumnConstraints().addAll(ccLeft, ccright);
+
 		/* First row shows the title and the state. */
+		
+		String styleTitle = "";
+		styleTitle += " -fx-font-size: 14px;";
+		styleTitle += " -fx-font-weight: bold;";
+		styleTitle += " -fx-background-color: rgb(235, 235, 235);";
 
-		Font font = new Label().fontProperty().get();
-		font = Font.font(font.getFamily(), FontWeight.BOLD, 14);
-		Background fill = Background.fill(Color.rgb(235, 235, 235));
-
-		labelTitle.fontProperty().set(font);
 		labelTitle.textProperty().set(task.getTitle());
-		labelTitle.backgroundProperty().set(fill);
+		labelTitle.styleProperty().set(styleTitle);
 		labelTitle.maxWidthProperty().set(Double.MAX_VALUE);
 		labelTitle.paddingProperty().set(paddingLabel);
 		labelTitle.borderProperty().set(borderLabel);
 
-		labelState.fontProperty().set(font);
 		labelState.textProperty().set(task.getState().name());
-		labelState.backgroundProperty().set(fill);
+		labelState.styleProperty().set(styleTitle);
 		labelState.maxWidthProperty().set(Double.MAX_VALUE);
 		labelState.paddingProperty().set(paddingLabel);
 		labelState.borderProperty().set(borderLabel);
 
-		ColumnConstraints ccTitle = new ColumnConstraints();
-		ccTitle.percentWidthProperty().set(80);
-		ColumnConstraints ccState = new ColumnConstraints();
-		ccState.percentWidthProperty().set(20);
-
-		Insets insTitle = new Insets(0, 2, padding, padding);
-		Insets insState = new Insets(0, padding, padding, 0);
-
 		GridPane.setConstraints(labelTitle, 0, row, 1, 1,
-			HPos.LEFT, VPos.CENTER, Priority.ALWAYS, Priority.NEVER, insTitle);
+			HPos.LEFT, VPos.CENTER, Priority.ALWAYS, Priority.NEVER, new Insets(0, 2, pad, pad));
 		GridPane.setConstraints(labelState, 1, row, 1, 1,
-			HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, insState);
+			HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, new Insets(0, pad, pad, 0));
 		root.getChildren().add(labelTitle);
 		root.getChildren().add(labelState);
-		root.getColumnConstraints().addAll(ccTitle, ccState);
 
 		/* For each level. */
-
-		Insets insets = new Insets(2, padding, 2, padding);
 
 		for (int i = 0; i < pm.size(); i++) {
 			Level level = new Level();
 			levels.add(level);
-
-			/* Message label. */
+			
 			row++;
+
+			/* Message . */
 			Label labelMessage = new Label();
 			labelMessage.maxWidthProperty().set(Double.MAX_VALUE);
 			labelMessage.paddingProperty().set(paddingLabel);
 			labelMessage.borderProperty().set(borderLabel);
 			level.labels.put("message", labelMessage);
 			GridPane.setConstraints(labelMessage, 0, row, 2, 1,
-				HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, insets);
+				HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, new Insets(8, pad, 2, pad));
 			root.getChildren().add(labelMessage);
+			
+			row++;
 
 			/* Time progress. */
-			row++;
 			Label labelTime = new Label();
 			labelTime.maxWidthProperty().set(Double.MAX_VALUE);
 			labelTime.paddingProperty().set(paddingLabel);
 			labelTime.borderProperty().set(borderLabel);
-			level.labels.put("time", labelTime);
-			GridPane.setConstraints(labelTime, 0, row, 2, 1,
-				HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, insets);
+			level.labels.put("progress", labelTime);
+			GridPane.setConstraints(labelTime, 0, row, 1, 1,
+				HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, new Insets(2, pad, 2, pad));
 			root.getChildren().add(labelTime);
 
-			/* Work progress. */
-			row++;
-			Label labelWork = new Label();
-			labelWork.maxWidthProperty().set(Double.MAX_VALUE);
-			labelWork.paddingProperty().set(paddingLabel);
-			labelWork.borderProperty().set(borderLabel);
-			level.labels.put("work", labelWork);
-			GridPane.setConstraints(labelWork, 0, row, 2, 1,
-				HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, insets);
-			root.getChildren().add(labelWork);
-
 			/* Progress bar. */
-			row++;
 			level.progress.progressProperty().set(0);
 			level.progress.maxWidthProperty().set(Double.MAX_VALUE);
-			level.progress.maxHeightProperty().set(15);
-			GridPane.setConstraints(level.progress, 0, row, 2, 1,
-				HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, insets);
+			GridPane.setConstraints(level.progress, 1, row, 1, 1,
+				HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, new Insets(2, pad, 2, pad));
 			root.getChildren().add(level.progress);
 		}
 
@@ -245,26 +229,29 @@ public class PaneProgress {
 
 		buttonStart = Buttons.start(false, false, false);
 		buttonCancel = Buttons.cancel(false, false, false);
+		buttonError = Buttons.error(false, false, false);
 		buttonRemove = Buttons.remove(false, false, false);
-
+		
 		ButtonBar buttonBar = new ButtonBar();
-		buttonBar.getButtons().addAll(buttonStart, buttonCancel, buttonRemove);
+		buttonBar.getButtons().addAll(buttonStart, buttonCancel, buttonError, buttonRemove);
 		GridPane.setConstraints(buttonBar, 0, row, 2, 1,
-			HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, insets);
+			HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, new Insets(8, pad, 2, pad));
 		root.getChildren().add(buttonBar);
 
 		/* Separator. */
 		row++;
 		Separator separator = new Separator();
 		GridPane.setConstraints(separator, 0, row, 2, 1,
-			HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, insets);
+			HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, new Insets(2, pad, 2, pad));
 		root.getChildren().add(separator);
 
 		buttonStart.setOnAction(e -> taskStart());
 		buttonCancel.setOnAction(e -> taskCancel());
+		buttonError.setOnAction(e -> showError());
 
 		buttonStart.disableProperty().set(false);
 		buttonCancel.disableProperty().set(true);
+		buttonError.disableProperty().set(true);
 		buttonStart.requestFocus();
 	}
 
@@ -277,7 +264,6 @@ public class PaneProgress {
 		timerTask = new TimerReport();
 		timer.schedule(timerTask, timeout, timeout);
 
-		task.reinitialize();
 		if (pool != null) {
 			pool.submit(task);
 		} else {
@@ -287,7 +273,8 @@ public class PaneProgress {
 		buttonStart.disableProperty().set(true);
 		buttonRemove.disableProperty().set(true);
 		buttonCancel.disableProperty().set(false);
-		buttonCancel.requestFocus();
+		buttonError.disableProperty().set(true);
+		buttonError.styleProperty().set("-fx-text-fill: gray;");
 	}
 
 	/**
@@ -323,6 +310,8 @@ public class PaneProgress {
 			String elapsedDuration = null;
 			String expectedDuration = null;
 
+			String workProgress = null;
+
 			double progress = -1;
 
 			boolean estimated = (!pg.indeterminate && pg.totalWork > 0 && pg.estimatedDuration != null);
@@ -351,47 +340,69 @@ public class PaneProgress {
 				double workDone = pg.workDone;
 				double totalWork = pg.totalWork;
 				progress = workDone / totalWork;
+
+				StringBuilder work = new StringBuilder();
+				work.append(StringRes.get("task-work-progress", "Work"));
+				work.append(" ");
+				work.append(pg.workDone);
+				work.append(" ");
+				work.append(StringRes.get("task-work-of", "of"));
+				work.append(" ");
+				work.append(pg.totalWork);
+				work.append(" (");
+				work.append(Numbers.getBigDecimal(100.0 * progress, 2).toPlainString());
+				work.append("%)");
+				workProgress = work.toString();
 			}
 
 			if (pg.message != null) {
 				lv.labels.get("message").textProperty().set(pg.message);
 			}
 
-			StringBuilder timeMessage = new StringBuilder();
+			StringBuilder progressMessage = new StringBuilder();
 			if (timeStart != null) {
-				timeMessage.append(StringRes.get("task-start-time", "Start time"));
-				timeMessage.append(": ");
-				timeMessage.append(timeStart);
+				progressMessage.append(StringRes.get("task-start-time", "Start"));
+				progressMessage.append(": ");
+				progressMessage.append(timeStart);
 			}
 			if (timeCurrent != null) {
-				timeMessage.append(" - ");
-				timeMessage.append(StringRes.get("task-current-time", "Current time"));
-				timeMessage.append(": ");
-				timeMessage.append(timeCurrent);
+				progressMessage.append(" - ");
+				progressMessage.append(StringRes.get("task-current-time", "Current"));
+				progressMessage.append(": ");
+				progressMessage.append(timeCurrent);
 			}
 			if (elapsedDuration != null) {
-				timeMessage.append(" - ");
-				timeMessage.append(StringRes.get("task-elapsed-duration", "Elapsed duration"));
-				timeMessage.append(": ");
-				timeMessage.append(elapsedDuration);
+				progressMessage.append(" - ");
+				progressMessage.append(StringRes.get("task-elapsed-duration", "Elapsed"));
+				progressMessage.append(": ");
+				progressMessage.append(elapsedDuration);
 			}
 			if (expectedDuration != null) {
-				timeMessage.append(" - ");
-				timeMessage.append(StringRes.get("task-expected-duration", "Expected duration"));
-				timeMessage.append(": ");
-				timeMessage.append(expectedDuration);
+				progressMessage.append(" - ");
+				progressMessage.append(StringRes.get("task-expected-duration", "Expected"));
+				progressMessage.append(": ");
+				progressMessage.append(expectedDuration);
 			}
 			if (timeEnd != null) {
-				timeMessage.append(" - ");
-				timeMessage.append(StringRes.get("task-end-time", "End time"));
-				timeMessage.append(": ");
-				timeMessage.append(timeEnd);
+				progressMessage.append(" - ");
+				progressMessage.append(StringRes.get("task-end-time", "End"));
+				progressMessage.append(": ");
+				progressMessage.append(timeEnd);
 			}
-			lv.labels.get("time").textProperty().set(timeMessage.toString());
+			if (workProgress != null) {
+				progressMessage.append(" - ");
+				progressMessage.append(workProgress);
+			}
+			lv.labels.get("progress").textProperty().set(progressMessage.toString());
 
 			if (progress >= 0) {
 				lv.progress.progressProperty().set(progress);
 			}
+		}
+
+		if (task.hasFailed() && task.getException() != null) {
+			buttonError.disableProperty().set(false);
+			buttonError.styleProperty().set("-fx-text-fill: red;");
 		}
 
 		if (task.hasTerminated()) {
@@ -400,7 +411,35 @@ public class PaneProgress {
 			buttonStart.disableProperty().set(false);
 			buttonRemove.disableProperty().set(false);
 			buttonCancel.disableProperty().set(true);
-			buttonStart.requestFocus();
+			if (!task.hasFailed()) buttonStart.requestFocus();
+			else buttonError.requestFocus();
 		}
+	}
+
+	/**
+	 * Show the exception if any.
+	 */
+	private void showError() {
+
+		if (task.getException() == null) {
+			Alert alert = new Alert(0.5, 0.2);
+			alert.setup(Alert.Type.WARNING, Alert.Content.TEXT);
+			alert.setTitle("No errors thrown");
+			alert.addHeaderText("No error avsailable.", "-fx-font-family: serif; -fx-font-size: 20;");
+			alert.show();
+			return;
+		}
+
+		Alert alert = new Alert(0.5, 0.5);
+		alert.setup(Alert.Type.ERROR, Alert.Content.TEXT);
+		alert.setTitle("Task error thrown");
+		alert.addHeaderText(task.getException().getMessage(), "-fx-font-family: serif; -fx-font-size: 20;");
+
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		task.getException().printStackTrace(pw);
+		alert.addContentText(sw.toString());
+
+		alert.show();
 	}
 }

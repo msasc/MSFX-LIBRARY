@@ -75,6 +75,9 @@ public abstract class Task implements Runnable, Callable<Void> {
 	 */
 	protected void executeTask() {
 
+		/* Initially there is no exception. */
+		exception = null;
+
 		/* Before execution. */
 		beforeExecute();
 
@@ -98,6 +101,9 @@ public abstract class Task implements Runnable, Callable<Void> {
 
 		/* After execution. */
 		afterExecute();
+
+		/* Ensure cancel requested does not remain set, the state is enough. */
+		cancelRequested.set(false);
 	}
 	/**
 	 * Callable implementation.
@@ -109,6 +115,12 @@ public abstract class Task implements Runnable, Callable<Void> {
 	 */
 	@Override
 	public final void run() { executeTask(); }
+
+	/**
+	 * Return the exception.
+	 * @return The eventual exception.
+	 */
+	public Throwable getException() { return exception; }
 
 	/**
 	 * Returns the state.
@@ -193,7 +205,8 @@ public abstract class Task implements Runnable, Callable<Void> {
 	}
 
 	/**
-	 * Reinitialize the task setting its state to ready.
+	 * Reinitialize the task setting its state to ready.This method is not strictly necessary to run
+	 * the task again.
 	 */
 	public void reinitialize() {
 		exception = null;

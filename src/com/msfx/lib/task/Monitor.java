@@ -203,20 +203,22 @@ public class Monitor {
 		Progress progress = new Progress();
 		progress.currentTime = LocalDateTime.now();
 		progress.startTime = level.startTime.get();
-		progress.message = level.message.get();
-		progress.workDone = level.workDone.get();
-		progress.totalWork = level.totalWork.get();
-		progress.indeterminate = level.indeterminate.get();
-		progress.elapsedDuration = Duration.between(progress.startTime, progress.currentTime);
-		if (!progress.indeterminate) {
-			double workCalc = progress.workDone > 0 ? Long.valueOf(progress.workDone).doubleValue() : 1.0;
-			double elapsed = Long.valueOf(progress.elapsedDuration.toMillis()).doubleValue();
-			long estimated = Double.valueOf(elapsed * progress.totalWork / workCalc).longValue();
-			progress.estimatedDuration = Duration.ofMillis(estimated);
-			progress.endTime = progress.startTime.plus(progress.estimatedDuration);
-		} else {
-			progress.estimatedDuration = null;
-			progress.endTime = null;
+		if (progress.startTime != null) {
+			progress.message = level.message.get();
+			progress.workDone = level.workDone.get();
+			progress.totalWork = level.totalWork.get();
+			progress.indeterminate = level.indeterminate.get();
+			progress.elapsedDuration = Duration.between(progress.startTime, progress.currentTime);
+			if (!progress.indeterminate) {
+				double workCalc = progress.workDone > 0 ? Long.valueOf(progress.workDone).doubleValue() : 1.0;
+				double elapsed = Long.valueOf(progress.elapsedDuration.toMillis()).doubleValue();
+				long estimated = Double.valueOf(elapsed * progress.totalWork / workCalc).longValue();
+				progress.estimatedDuration = Duration.ofMillis(estimated);
+				progress.endTime = progress.startTime.plus(progress.estimatedDuration);
+			} else {
+				progress.estimatedDuration = null;
+				progress.endTime = null;
+			}
 		}
 		return progress;
 	}

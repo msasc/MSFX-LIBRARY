@@ -20,7 +20,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.ButtonBar;
-import javafx.scene.control.Separator;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
@@ -60,7 +59,7 @@ public class PaneCombo {
 		buttonBar.setPadding(new Insets(padding));
 
 		VBox vbox = new VBox();
-		vbox.getChildren().addAll(new Separator(), buttonBar);
+		vbox.getChildren().addAll(buttonBar);
 
 		root = new BorderPane();
 		root.setId("root");

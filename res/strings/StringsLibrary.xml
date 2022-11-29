@@ -47,6 +47,7 @@
 	<entry key="button-Columns">Columns</entry>
 	<entry key="button-Delete">Delete</entry>
 	<entry key="button-Download">Download</entry>
+	<entry key="button-Error">Error</entry>
 	<entry key="button-Finish">Finish</entry>
 	<entry key="button-Ignore">Ignore</entry>
 	<entry key="button-Load">Load</entry>
@@ -83,12 +84,12 @@
 	
 	<!-- Task progress -->
 
-	<entry key="task-start-time">Start time</entry>
-	<entry key="task-current-time">Current time</entry>
-	<entry key="task-end-time">End time</entry>
-	<entry key="task-elapsed-duration">Elapsed duration</entry>
-	<entry key="task-expected-duration">Expected duration</entry>
-	<entry key="task-work-progress">Work progress</entry>
+	<entry key="task-start-time">Start</entry>
+	<entry key="task-current-time">Current</entry>
+	<entry key="task-end-time">End</entry>
+	<entry key="task-elapsed-duration">Elapsed</entry>
+	<entry key="task-expected-duration">Expected</entry>
+	<entry key="task-work-progress">Work</entry>
 	<entry key="task-work-of">of</entry>
 
 

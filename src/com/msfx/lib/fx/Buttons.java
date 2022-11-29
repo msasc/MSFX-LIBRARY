@@ -34,6 +34,8 @@ public class Buttons {
 	public static final String CANCEL = "button-Cancel";
 	/** ID of the default CLOSE button. */
 	public static final String CLOSE = "button-Close";
+	/** ID of the default ERROR button. */
+	public static final String ERROR = "button-Error";
 	/** ID of the default FINISH button. */
 	public static final String FINISH = "button-Finish";
 	/** ID of the default IGNORE button. */
@@ -100,6 +102,16 @@ public class Buttons {
 	 */
 	public static Button close(boolean defButton, boolean cancel, boolean close) {
 		return button(CLOSE, defButton, cancel, close);
+	}
+	/**
+	 * Error button.
+	 * @param defButton A boolean indicating whether it is the default button.
+	 * @param cancel    A boolean indicating whether it is the cancel button.
+	 * @param close     A boolean to set the close property, used in windows to close it after
+	 * @return The button.
+	 */
+	public static Button error(boolean defButton, boolean cancel, boolean close) {
+		return button(ERROR, defButton, cancel, close);
 	}
 	/**
 	 * Finish button.

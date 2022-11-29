@@ -20,10 +20,9 @@ import com.msfx.lib.util.HTML;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;
-import javafx.scene.control.Separator;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -92,66 +91,17 @@ public class Alert {
 		this.content = content;
 		double pad = dialog.getPaneCombo().getPadding();
 
-		/* Set the image and the header if not type PLAIN. */
-		if (type != Type.PLAIN) {
-
-			headerText = new TextFlow();
-			headerText
-					.paddingProperty()
-					.set(new Insets(0, pad, pad, pad));
-			headerText
-					.maxHeightProperty()
-					.set(Region.USE_PREF_SIZE);
-
-			ImageView image = null;
-			if (type == Type.CONFIRMATION) image = FX.getImageView("dialog-confirm.png");
-			if (type == Type.ERROR) image = FX.getImageView("dialog-error.png");
-			if (type == Type.INFORMATION) image = FX.getImageView("dialog-information.png");
-			if (type == Type.WARNING) image = FX.getImageView("dialog-warning.png");
-
-			Separator hsepTop = new Separator(Orientation.HORIZONTAL);
-			Separator hsepBottom = new Separator(Orientation.HORIZONTAL);
-
-			GridPane.setConstraints(hsepTop, 0, 0, 2, 1);
-			GridPane.setConstraints(
-				headerText, 0, 1, 1, 1,
-				HPos.LEFT, VPos.CENTER, Priority.ALWAYS, Priority.NEVER, null);
-			GridPane.setConstraints(image, 1, 1, 1, 1);
-			GridPane.setConstraints(hsepBottom, 0, 2, 2, 1);
-
-			GridPane header = new GridPane();
-			header.getChildren().addAll(hsepTop, headerText, image, hsepBottom);
-
-			dialog
-					.getPaneCombo()
-					.setTop(header);
-		}
-		/* Setup top pane when type PLAIN. */
-		if (type == Type.PLAIN) {
-			Separator hsepBottom = new Separator(Orientation.HORIZONTAL);
-			dialog
-					.getPaneCombo()
-					.setTop(hsepBottom);
-		}
-
-		/* Initialize the content for TEXT or HTML. */
+		headerText = new TextFlow();
+		headerText.paddingProperty().set(new Insets(0, pad, pad, pad));
+		headerText.maxHeightProperty().set(Region.USE_PREF_SIZE);
 		if (content == Content.TEXT) {
 			contentText = new TextFlow();
-			contentText
-					.paddingProperty()
-					.set(new Insets(0, pad, pad, pad));
-			dialog
-					.getPaneCombo()
-					.setCenter(contentText);
+			contentText.paddingProperty().set(new Insets(0, pad, pad, pad));
 		}
 		if (content == Content.HTML) {
 			contentHTML = new WebView();
-			dialog
-					.getPaneCombo()
-					.setCenter(contentHTML);
 		}
 
-		/* Set default buttons that can be changed later. */
 		if (type == Type.CONFIRMATION) {
 			Button ok = Buttons.ok(true, false, true);
 			Button cancel = Buttons.cancel(false, true, true);
@@ -160,6 +110,7 @@ public class Alert {
 			Button ok = Buttons.ok(true, false, true);
 			setButtons(ok);
 		}
+
 	}
 
 	/**
@@ -206,7 +157,6 @@ public class Alert {
 	 */
 	public void addHeaderText(Text text) {
 		if (text == null) return;
-		if (type == Type.PLAIN) return;
 		headerText.getChildren().add(text);
 	}
 
@@ -275,5 +225,37 @@ public class Alert {
 	 * Show the dialog and return the button used to close it.
 	 * @return The button that closed the dialog.
 	 */
-	public Button show() { return dialog.show(); }
+	public Button show() {
+
+		ImageView image = null;
+		if (type == Type.CONFIRMATION) image = FX.getImageView("dialog-confirm.png");
+		if (type == Type.ERROR) image = FX.getImageView("dialog-error.png");
+		if (type == Type.INFORMATION) image = FX.getImageView("dialog-information.png");
+		if (type == Type.WARNING) image = FX.getImageView("dialog-warning.png");
+
+		boolean showHeader = image != null || !headerText.getChildren().isEmpty();
+
+		if (showHeader) {
+			GridPane.setConstraints(headerText, 0, 1, 1, 1, HPos.LEFT, VPos.CENTER, Priority.ALWAYS, Priority.NEVER);
+			if (image != null) GridPane.setConstraints(image, 1, 1, 1, 1);
+		}
+
+		GridPane header = new GridPane();
+		if (showHeader) {
+			header.getChildren().add(headerText);
+			if (image != null) header.getChildren().add(image);
+		}
+
+		dialog.getPaneCombo().setTop(header);
+
+		/* Initialize the content for TEXT or HTML. */
+		if (content == Content.TEXT) {
+			dialog.getPaneCombo().setCenter(new ScrollPane(contentText));
+		}
+		if (content == Content.HTML) {
+			dialog.getPaneCombo().setCenter(new ScrollPane(contentHTML));
+		}
+
+		return dialog.show();
+	}
 }

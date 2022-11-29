@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,25 +28,21 @@ import java.util.*;
  */
 public class Cell {
 
-	/**
-	 * Universal unique id.
-	 */
-	private final UUID uuid;
-	/**
-	 * Name.
-	 */
+	/** Name. */
 	private String name;
-	/**
-	 * Master map with cell nodes.
-	 */
+	/** Universal unique id. */
+	private final UUID uuid;
+	/** Master map with cell nodes. */
 	private Map<Node, Node> nodes;
 
 	/**
 	 * Constructor.
+	 * @param name The cell name.
 	 */
-	public Cell() {
-		uuid = UUID.randomUUID();
-		nodes = new HashMap<>();
+	public Cell(String name) {
+		this.name = name;
+		this.uuid = UUID.randomUUID();
+		this.nodes = new HashMap<>();
 	}
 	/**
 	 * Constructor to restore.
