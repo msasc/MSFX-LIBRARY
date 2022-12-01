@@ -65,6 +65,9 @@ public class PaneProgress {
 	private class TimerReport extends TimerTask {
 		public void run() { Platform.runLater(() -> timerReport()); }
 	}
+	
+	/** Thread index. */
+	private static int threadIndex = 0;
 
 	/** Title label. */
 	private final Label labelTitle = new Label();
@@ -259,16 +262,18 @@ public class PaneProgress {
 	 * Start the task.
 	 */
 	private void taskStart() {
-
-		timer = new Timer();
+		
+		timer = new Timer("PROGRESS-TIMER-" + Strings.leftPad(threadIndex, 3, "0"));
 		timerTask = new TimerReport();
 		timer.schedule(timerTask, timeout, timeout);
 
 		if (pool != null) {
 			pool.submit(task);
 		} else {
-			new Thread(task).start();
+			String name = "PROGRESS-RUNNER-" + Strings.leftPad(threadIndex, 3, "0");
+			new Thread(task, name).start();
 		}
+		threadIndex++;
 
 		buttonStart.disableProperty().set(true);
 		buttonRemove.disableProperty().set(true);
@@ -413,6 +418,7 @@ public class PaneProgress {
 			buttonCancel.disableProperty().set(true);
 			if (!task.hasFailed()) buttonStart.requestFocus();
 			else buttonError.requestFocus();
+			threadIndex--;
 		}
 	}
 

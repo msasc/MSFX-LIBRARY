@@ -28,14 +28,17 @@ import java.util.List;
 public class ListPatternSource extends PatternSource {
 	
 	/** The underlying pattern list. */
-	private final List<Pattern> patterns = new ArrayList<>();
+	private List<Pattern> patterns = new ArrayList<>();
 	/** Pattern iterator. */
 	private Iterator<Pattern> iterator;
 	
 	/**
 	 * Constructor.
 	 */
-	public ListPatternSource() { }
+	public ListPatternSource(List<Pattern> patterns) {
+		this.patterns = patterns;
+		iterator = patterns.iterator();
+	}
 	/**
 	 * Add a pattern.
 	 * @param pattern A pattern.

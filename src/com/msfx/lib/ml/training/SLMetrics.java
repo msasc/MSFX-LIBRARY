@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.msfx.lib.ml.function.Matcher;
 import com.msfx.lib.ml.function.match.CategoryMatcher;
+import com.msfx.lib.util.Numbers;
 import com.msfx.lib.util.Vector;
 
 /**
@@ -37,7 +38,7 @@ public class SLMetrics {
 	/** Number of matches. */
 	private int matches;
 	/** Calls to compute. */
-	private double calls;
+	private int calls;
 
 	/* List of lengths of the arrays of pattern and network output. */
 	private int[] lengths;
@@ -48,8 +49,13 @@ public class SLMetrics {
 	private double errorAvg;
 	/** Average absolute error standard deviation. */
 	private double errorStd;
-	/** Performance. */
-	private double performance;
+
+	/**
+	 * Constructor.
+	 * @param label   Label to name the series of metrics being processed.
+	 * @param lengths List of lengths of the arrays of pattern and network output.
+	 */
+	public SLMetrics(String label, List<Integer> lengths) { this(label, Numbers.toIntArray(lengths)); }
 
 	/**
 	 * Constructor.
@@ -121,16 +127,23 @@ public class SLMetrics {
 	 * @return The label.
 	 */
 	public String getLabel() { return label; }
+	
+	/**
+	 * Return the number of calls.
+	 * @return The number of calls.
+	 */
+	public int getCalls() { return calls; }
 	/**
 	 * Return the number of matches.
 	 * @return The number of matches.
 	 */
 	public int getMatches() { return matches; }
-	/**
-	 * Return the performance.
-	 * @return The performance.
-	 */
-	public double getPerformance() { return performance; }
+	
+	public double getPerformance() {
+		double matches = getMatches();
+		double calls = getCalls();
+		return matches / calls;
+	}
 
 	/**
 	 * Reset.
@@ -144,7 +157,6 @@ public class SLMetrics {
 		calls = 0;
 		errorAvg = 0;
 		errorStd = 0;
-		performance = 0;
 	}
 
 	/**

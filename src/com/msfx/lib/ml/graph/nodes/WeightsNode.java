@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,17 @@
 
 package com.msfx.lib.ml.graph.nodes;
 
+import com.msfx.lib.ml.graph.Graph;
+import com.msfx.lib.ml.graph.Graph.Range;
 import com.msfx.lib.ml.graph.Node;
 import com.msfx.lib.util.json.JSONArray;
 import com.msfx.lib.util.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 /**
  * Minimum weights node using stochastic gradient descent back propagation to apply adjustments.
@@ -41,9 +46,8 @@ public class WeightsNode extends Node {
 		WeightsNode node = new WeightsNode(UUID.fromString(uuid));
 		node.inputSize = obj.get("input-size").getNumber().intValue();
 		node.outputSize = obj.get("output-size").getNumber().intValue();
-		node.eta = obj.get("eta").getNumber().doubleValue();
-		node.alpha = obj.get("alpha").getNumber().doubleValue();
-		node.lambda = obj.get("lambda").getNumber().doubleValue();
+		node.learningRate = obj.get("learning-rate").getNumber().doubleValue();
+		node.momentum = obj.get("momentum").getNumber().doubleValue();
 		node.gradients = new double[node.inputSize][node.outputSize];
 		node.weights = new double[node.inputSize][node.outputSize];
 		JSONArray arrIn = obj.get("weights").getArray();
@@ -56,54 +60,46 @@ public class WeightsNode extends Node {
 		return node;
 	}
 
-	/**
-	 * Input size.
-	 */
+	private class TaskBackward implements Callable<Void> {
+		private int inStart, inEnd;
+		private TaskBackward(int inStart, int inEnd) { this.inStart = inStart; this.inEnd = inEnd; }
+		public Void call() throws Exception { backward(inStart, inEnd); return null; }
+	}
+	private class TaskForward implements Callable<Void> {
+		private int outStart, outEnd;
+		private TaskForward(int outStart, int outEnd) { this.outStart = outStart; this.outEnd = outEnd; }
+		public Void call() throws Exception { forward(outStart, outEnd); return null; }
+	}
+
+	/** Input size. */
 	private int inputSize;
-	/**
-	 * Output size.
-	 */
+	/** Output size. */
 	private int outputSize;
 
-	/**
-	 * Input values read from the unique input edge.
-	 */
+	/** Input values read from the unique input edge. */
 	private double[] inputValues;
-	/**
-	 * Output values pushed to the output edge.
-	 */
+	/** Output values pushed to the output edge. */
 	private double[] outputValues;
 
-	/**
-	 * Output deltas read from the unique output edge.
-	 */
+	/** Output deltas read from the unique output edge. */
 	private double[] outputDeltas;
-	/**
-	 * input deltas pushed from the unique input edge.
-	 */
+	/** input deltas pushed from the unique input edge. */
 	private double[] inputDeltas;
 
-	/**
-	 * Gradients (in, out).
-	 */
+	/** Gradients (in, out). */
 	private double[][] gradients;
-	/**
-	 * Weights (in, out).
-	 */
+	/** Weights (in, out). */
 	private double[][] weights;
 
-	/**
-	 * Learning rate.
-	 */
-	private double eta = 0.1;
-	/**
-	 * Momentum factor.
-	 */
-	private double alpha = 0.0;
-	/**
-	 * Weight decay factor, which is also a regularization term.
-	 */
-	private double lambda = 0.0;
+	/** Learning rate. */
+	private double learningRate = 0.1;
+	/** Momentum factor. */
+	private double momentum = 0.6;
+
+	/** List of backward tasks when parallel executing is implemented. */
+	private List<Callable<Void>> backwardTasks;
+	/** List of forward tasks when parallel executing is implemented. */
+	private List<Callable<Void>> forwardTasks;
 
 	/**
 	 * Constructor.
@@ -118,14 +114,12 @@ public class WeightsNode extends Node {
 		this.weights = new double[inputSize][outputSize];
 
 		/* Randomly initialize weights. */
-		Random rand = new Random();
+		Random rand = new Random(100000);
 		for (int in = 0; in < inputSize; in++) {
 			for (int out = 0; out < outputSize; out++) {
 				weights[in][out] = rand.nextGaussian();
 			}
 		}
-
-		// TODO Check initialize inputDeltas and outputValues and not create an array per pulse.
 	}
 	/**
 	 * Constructor to restore.
@@ -139,24 +133,54 @@ public class WeightsNode extends Node {
 	 */
 	@Override
 	public void backward() {
+
 		inputValues = getInputEdges().get(0).getForwardValues();
 		outputDeltas = getOutputEdges().get(0).getBackwardDeltas();
 		inputDeltas = new double[inputSize];
-		for (int in = 0; in < inputSize; in++) {
+
+		boolean parallel = getCell().getNetwork().isParallelProcessing();
+		if (!parallel) {
+			int inStart = 0;
+			int inEnd = inputSize - 1;
+			backward(inStart, inEnd);
+		} else {
+			if (backwardTasks == null) {
+				List<Range> ranges = getRanges(inputSize);
+				backwardTasks = new ArrayList<>();
+				for (Range range : ranges) { backwardTasks.add(new TaskBackward(range.start, range.end)); }
+			}
+			getCell().getNetwork().getPool().invokeAll(backwardTasks);
+		}
+
+		getInputEdges().get(0).pushBackward(inputDeltas);
+	}
+
+	/**
+	 * Backward process from start input indexes to end, included.
+	 * @param inStart Start input index.
+	 * @param inEnd   End input index, included.
+	 */
+	private void backward(int inStart, int inEnd) {
+		for (int in = inStart; in <= inEnd; in++) {
 			inputDeltas[in] = 0;
 			double inputValue = inputValues[in];
 			for (int out = 0; out < outputSize; out++) {
+				
 				double weight = weights[in][out];
 				double outputDelta = outputDeltas[out];
 				double gradientPrev = gradients[in][out];
-				double gradientCurr = (1 - alpha) * eta * outputDelta * inputValue + (alpha * gradientPrev);
-				inputDeltas[in] += (weight * outputDelta);
-				gradients[in][out] = gradientCurr;
-				weights[in][out] += gradientCurr;
-				weights[in][out] *= (1.0 - eta * lambda);
+				double gradientCurr = outputDelta * inputValue;
+				
+				double inputDelta = (weight * outputDelta);
+				inputDeltas[in] += inputDelta;
+				
+				double gradient = (momentum * gradientPrev) + (1 - momentum) * gradientCurr;
+				gradients[in][out] = gradient;
+				
+				double weightDelta = learningRate * gradient;
+				weights[in][out] += weightDelta;
 			}
 		}
-		getInputEdges().get(0).pushBackward(inputDeltas);
 	}
 
 	/**
@@ -164,9 +188,33 @@ public class WeightsNode extends Node {
 	 */
 	@Override
 	public void forward() {
+
 		inputValues = getInputEdges().get(0).getForwardValues();
 		outputValues = new double[outputSize];
-		for (int out = 0; out < outputSize; out++) {
+
+		boolean parallel = getCell().getNetwork().isParallelProcessing();
+		if (!parallel) {
+			int outStart = 0;
+			int outEnd = outputSize - 1;
+			forward(outStart, outEnd);
+		} else {
+			if (forwardTasks == null) {
+				List<Range> ranges = getRanges(outputSize);
+				forwardTasks = new ArrayList<>();
+				for (Range range : ranges) { forwardTasks.add(new TaskForward(range.start, range.end)); }
+			}
+			getCell().getNetwork().getPool().invokeAll(forwardTasks);
+		}
+
+		getOutputEdges().get(0).pushForward(outputValues);
+	}
+	/**
+	 * Forward process from start output indexes to end, included.
+	 * @param outStart Start output index.
+	 * @param outEnd   End output index, included.
+	 */
+	private void forward(int outStart, int outEnd) {
+		for (int out = outStart; out <= outEnd; out++) {
 			outputValues[out] = 0;
 			for (int in = 0; in < inputSize; in++) {
 				double input = inputValues[in];
@@ -174,7 +222,12 @@ public class WeightsNode extends Node {
 				outputValues[out] += (input * weight);
 			}
 		}
-		getOutputEdges().get(0).pushForward(outputValues);
+	}
+
+	private List<Range> getRanges(int count) {
+		int module = Runtime.getRuntime().availableProcessors();
+		if (module < count / 4) module = count / 4;
+		return Graph.getRanges(count, module);
 	}
 
 	/**
@@ -183,9 +236,8 @@ public class WeightsNode extends Node {
 	public void toJSONObject(JSONObject def) {
 		def.put("input-size", inputSize);
 		def.put("output-size", outputSize);
-		def.put("eta", eta);
-		def.put("alpha", alpha);
-		def.put("lambda", lambda);
+		def.put("learning-rate", learningRate);
+		def.put("momentum", momentum);
 		JSONArray arrIn = new JSONArray();
 		for (int in = 0; in < inputSize; in++) {
 			JSONArray arrOut = new JSONArray();

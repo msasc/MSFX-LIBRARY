@@ -17,6 +17,7 @@ package com.msfx.lib.util;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 /**
  * Number utilities.
@@ -273,5 +274,16 @@ public class Numbers {
 			sign = -1;
 		}
 		return sign;
+	}
+	
+	/**
+	 * Returns an integer array from a list of integers.
+	 * @param values The list of integer values.
+	 * @return The int[]
+	 */
+	public static int[] toIntArray(List<Integer> values) {
+		int[] arr = new int[values.size()];
+		for (int i = 0; i < values.size(); i++) { arr[i] = values.get(i); }
+		return arr;
 	}
 }

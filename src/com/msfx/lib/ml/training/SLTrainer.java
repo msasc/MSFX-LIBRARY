@@ -25,6 +25,7 @@ import com.msfx.lib.ml.data.Pattern;
 import com.msfx.lib.ml.data.PatternSource;
 import com.msfx.lib.ml.graph.Network;
 import com.msfx.lib.task.TaskProgress;
+import com.msfx.lib.util.Numbers;
 import com.msfx.lib.util.Vector;
 
 /**
@@ -32,7 +33,7 @@ import com.msfx.lib.util.Vector;
  * 
  * @author Miquel Sas
  */
-public class SLTainer extends TaskProgress {
+public class SLTrainer extends TaskProgress {
 
 	/** Notification level epoch. */
 	private static final int LEVEL_EPOCH = 0;
@@ -52,7 +53,28 @@ public class SLTainer extends TaskProgress {
 	/**
 	 * Constructor setting two levels of progress.
 	 */
-	public SLTainer() { super(2); }
+	public SLTrainer() { super(2); }
+
+	/**
+	 * Set the number of epochs to train.
+	 * @param epochs The number of epochs.
+	 */
+	public void setEpochs(int epochs) { this.epochs = epochs; }
+	/**
+	 * Set the network.
+	 * @param network The network.
+	 */
+	public void setNetwork(Network network) { this.network = network; }
+	/**
+	 * Set the test source.
+	 * @param sourceTest The test source of patterns.
+	 */
+	public void setSourceTest(PatternSource sourceTest) { this.sourceTest = sourceTest; }
+	/**
+	 * Set the train source.
+	 * @param sourceTrain The train source of patterns.
+	 */
+	public void setSourceTrain(PatternSource sourceTrain) { this.sourceTrain = sourceTrain; }
 
 	/**
 	 * Execute this trainer task.
@@ -73,6 +95,9 @@ public class SLTainer extends TaskProgress {
 		/* Total work and work done. */
 		long totalWork = sourceTrain.size() * epochs;
 		long totalDone = 0;
+		
+		/* Metrics. */
+		SLMetrics trainMetrics = new SLMetrics("", network.getOutputSizes());
 
 		/* Iterate epochs. */
 		for (int epoch = 0; epoch < epochs; epoch++) {
@@ -82,21 +107,14 @@ public class SLTainer extends TaskProgress {
 
 			/* Start the source level. */
 			getMonitor().notifyStart(LEVEL_PATTERN);
-			long epochWork = sourceTrain.size();
-			long epochDone = 0;
+			long patternWork = sourceTrain.size();
+			long patternDone = 0;
 			sourceTrain.reset();
+			trainMetrics.reset();
 			while (sourceTrain.hasNext()) {
 
 				/* Check cancelled. */
 				if (cancel()) break;
-
-				/* Notify. */
-				totalDone++;
-				epochDone++;
-				getMonitor().notifyMessage(LEVEL_EPOCH, "Processing epoch " + (epoch + 1) + ", pattern " + totalDone);
-				getMonitor().notifyMessage(LEVEL_PATTERN, "Processing pattern " + epochDone);
-				getMonitor().notifyProgress(LEVEL_EPOCH, totalDone, totalWork);
-				getMonitor().notifyProgress(LEVEL_PATTERN, epochDone, epochWork);
 
 				/* Read pattern and process it. */
 				Pattern pattern = sourceTrain.next();
@@ -112,6 +130,41 @@ public class SLTainer extends TaskProgress {
 					networkDeltas.add(n_deltas);
 				}
 				network.backward(networkDeltas);
+				
+				/* Calculate train metrics. */
+				trainMetrics.compute(patternOutput, networkOutput);
+				
+				/* Notify. */
+				totalDone++;
+				patternDone++;
+				
+				StringBuilder epochMsg = new StringBuilder();
+				epochMsg.append("Processing epoch ");
+				epochMsg.append((epoch + 1));
+				epochMsg.append(" of ");
+				epochMsg.append(epochs);
+				epochMsg.append(", pattern ");
+				epochMsg.append(totalDone);
+				epochMsg.append(" of ");
+				epochMsg.append(totalWork);
+				getMonitor().notifyMessage(LEVEL_EPOCH, epochMsg.toString());
+				
+				StringBuilder patternMsg = new StringBuilder();
+				patternMsg.append("Processing pattern ");
+				patternMsg.append(patternDone);
+				patternMsg.append(" of ");
+				patternMsg.append(patternWork);
+				patternMsg.append(", matches ");
+				patternMsg.append(trainMetrics.getMatches());
+				patternMsg.append(" of ");
+				patternMsg.append(trainMetrics.getCalls());
+				patternMsg.append(" (");
+				patternMsg.append(Numbers.getBigDecimal(100 * trainMetrics.getPerformance(), 2).toPlainString());
+				patternMsg.append("%)");
+				getMonitor().notifyMessage(LEVEL_PATTERN, patternMsg.toString());
+				
+				getMonitor().notifyProgress(LEVEL_EPOCH, 1, totalWork);
+				getMonitor().notifyProgress(LEVEL_PATTERN, 1, patternWork);
 			}
 
 			/* End monitor of pattern. */

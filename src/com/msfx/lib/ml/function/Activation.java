@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -64,14 +64,22 @@ public abstract class Activation {
 	/**
 	 * Default constructor.
 	 */
-	protected Activation() { }
+	protected Activation() {}
 
 	/**
 	 * Return an identification id of this activation function.
 	 *
 	 * @return The id.
 	 */
-	public String getId() { return getClass().getSimpleName(); }
+	public String getId() {
+		String name = getClass().getSimpleName();
+		if (name.equals(BipolarSigmoid.class.getSimpleName())) return "BS";
+		if (name.equals(ReLU.class.getSimpleName())) return "RL";
+		if (name.equals(Sigmoid.class.getSimpleName())) return "SG";
+		if (name.equals(SoftMax.class.getSimpleName())) return "SM";
+		if (name.equals(TANH.class.getSimpleName())) return "TH";
+		return name;
+	}
 
 	/**
 	 * Calculates the output values of the function given the trigger values.

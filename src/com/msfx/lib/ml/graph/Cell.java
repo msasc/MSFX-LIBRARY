@@ -34,6 +34,9 @@ public class Cell {
 	private final UUID uuid;
 	/** Master map with cell nodes. */
 	private Map<Node, Node> nodes;
+	
+	/** Parent network. */
+	Network network;
 
 	/**
 	 * Constructor.
@@ -56,24 +59,27 @@ public class Cell {
 	}
 
 	/**
+	 * Return the network that contains this cell.
+	 * @return The network.
+	 */
+	public Network getNetwork() { return network; }
+	
+	/**
 	 * Put a node in a restore process.
-	 *
 	 * @param node The node.
 	 */
 	void putNode(Node node) {
-		node.setCell(this);
+		node.cell = this;
 		nodes.put(node, node);
 	}
 
 	/**
 	 * Return the universal unique id.
-	 *
 	 * @return The UUID.
 	 */
 	public UUID getUUID() { return uuid; }
 	/**
 	 * Return the name.
-	 *
 	 * @return The name.
 	 */
 	public String getName() { return name; }
@@ -81,7 +87,6 @@ public class Cell {
 	/**
 	 * Returns the list of input edges, edges that are input edges of nodes of the cell, and are
 	 * input because they do not have an input node, or their input node is from another cell.
-	 *
 	 * @return The list of input edges.
 	 */
 	public List<Edge> getInputEdges() {
@@ -103,7 +108,6 @@ public class Cell {
 	/**
 	 * Returns the list of output edges, edges that are output edges of nodes of the cell, and are
 	 * output because they do not have an output node, or their output node is from another cell.
-	 *
 	 * @return The list of output edges.
 	 */
 	public List<Edge> getOutputEdges() {
@@ -124,7 +128,6 @@ public class Cell {
 	}
 	/**
 	 * Return the collection of nodes in this cell.
-	 *
 	 * @return The nodes.
 	 */
 	public Collection<Node> getNodes() { return nodes.values(); }
@@ -144,7 +147,6 @@ public class Cell {
 
 	/**
 	 * Return a JSON definition of the edge.
-	 *
 	 * @return The JSON definition.
 	 */
 	public JSONObject toJSONObject() {

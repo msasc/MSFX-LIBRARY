@@ -36,23 +36,15 @@ import java.util.UUID;
  */
 public abstract class Node {
 
-	/**
-	 * Universal unique id.
-	 */
+	/** Universal unique id. */
 	private final UUID uuid;
 
-	/**
-	 * The cell to which the node belongs.
-	 */
-	private Cell cell;
+	/** The cell to which the node belongs. */
+	Cell cell;
 
-	/**
-	 * List of input edges.
-	 */
+	/** List of input edges. */
 	private final List<Edge> inputEdges = new ArrayList<>();
-	/**
-	 * List of output edges.
-	 */
+	/** List of output edges. */
 	private final List<Edge> outputEdges = new ArrayList<>();
 
 	/**
@@ -85,29 +77,20 @@ public abstract class Node {
 
 	/**
 	 * Return the list of input edges.
-	 *
 	 * @return the list of edges.
 	 */
 	public List<Edge> getInputEdges() { return inputEdges; }
 	/**
 	 * Return the list of output edges.
-	 *
 	 * @return The list of edges.
 	 */
 	public List<Edge> getOutputEdges() { return outputEdges; }
 
 	/**
 	 * Return the cell to which the node belongs.
-	 *
 	 * @return The cell.
 	 */
 	public Cell getCell() { return cell; }
-	/**
-	 * Set the cell to which the node should belong.
-	 *
-	 * @param cell The cell.
-	 */
-	void setCell(Cell cell) { this.cell = cell; }
 
 	/**
 	 * Check equality.

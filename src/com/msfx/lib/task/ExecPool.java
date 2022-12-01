@@ -67,6 +67,8 @@ public class ExecPool {
 	private final String name;
 	/** Fork join pool for execution. */
 	private final ForkJoinPool pool;
+	
+	public ExecPool(ForkJoinPool pool) { this.name = "COMMON"; this.pool = pool; }
 
 	/**
 	 * Constructor with a default "ROOT" name and "availableProcessors" pool size.

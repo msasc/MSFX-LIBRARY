@@ -18,6 +18,7 @@
  */
 package com.msfx.lib.ml.graph;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.msfx.lib.ml.function.Activation;
@@ -31,7 +32,40 @@ import com.msfx.lib.ml.graph.nodes.WeightsNode;
  * @author Miquel Sas
  */
 public class Graph {
-	
+
+	/**
+	 * Range structure.
+	 */
+	public static class Range {
+		public int start;
+		public int end;
+		public Range(int start, int end) { this.start = start; this.end = end; }
+	}
+
+	/**
+	 * Returns the list of ranges to cover a certain number of indexes using the argument module.
+	 * @param count  The number of indexes.
+	 * @param module The module to fraction count (available processors)
+	 * @return The list of ranges.
+	 */
+	public static List<Range> getRanges(int count, int module) {
+		List<Range> ranges = new ArrayList<>();
+		int indexes = (count > module ? Math.max(count / module, 1) : 1);
+		int start = 0;
+		while (true) {
+			int end = start + indexes - 1;
+			if (end >= count) {
+				end = count - 1;
+			}
+			ranges.add(new Range(start, end));
+			if (end == count - 1) {
+				break;
+			}
+			start = end + 1;
+		}
+		return ranges;
+	}
+
 	/**
 	 * Connect two nodes of a network with an edge of the given size.
 	 * @param size       The size.
@@ -59,14 +93,14 @@ public class Graph {
 		/* Output edges of the input cell and input edges of the output cell. */
 		List<Edge> edgesOut = cellIn.getOutputEdges();
 		List<Edge> edgesIn = cellOut.getInputEdges();
-		
+
 		/* Validate number of edges. */
 		if (cellIn.getOutputEdges().size() != cellOut.getInputEdges().size()) {
 			throw new IllegalArgumentException("Invalid in-out number of edges");
 		}
-		
+
 		int numEdges = edgesOut.size();
-		
+
 		/* Validate sizes of edges. */
 		for (int i = 0; i < numEdges; i++) {
 			Edge edgeOut = edgesOut.get(i);
@@ -75,21 +109,21 @@ public class Graph {
 				throw new IllegalArgumentException("Invalid edge sizes");
 			}
 		}
-		
+
 		/* Do connect. */
 		for (int i = 0; i < numEdges; i++) {
-			
+
 			/* Edges out and in. */
 			Edge edgeOut = cellIn.getOutputEdges().get(i);
 			Edge edgeIn = cellOut.getInputEdges().get(i);
-			
+
 			/* Connection edge. */
 			Node nodeOut = edgeOut.getInputNode();
 			Node nodeIn = edgeIn.getOutputNode();
 			Edge edge = new Edge(edgeOut.size());
 			edge.setInputNode(nodeOut);
 			edge.setOutputNode(nodeIn);
-			
+
 			/* Replace edges out and in by the connect edge. */
 			for (int j = 0; j < nodeOut.getOutputEdges().size(); j++) {
 				if (nodeOut.getOutputEdges().get(j).equals(edgeOut)) {
@@ -118,16 +152,18 @@ public class Graph {
 	 */
 	public static Cell rnn(int inputSize, int outputSize, Activation activation, boolean recurrent, boolean bias) {
 
-
 		StringBuilder name = new StringBuilder();
 		name.append("RNN-");
 		name.append(inputSize);
 		name.append("-");
 		name.append(outputSize);
 		name.append("-");
-		name.append(activation.getClass().getSimpleName());
-		if (recurrent) name.append("-REC");
-		if (bias) name.append("-BIAS");
+		name.append(activation.getId());
+		if (recurrent || bias) {
+			name.append("-");
+			if (recurrent) name.append("REC");
+			if (bias) name.append("BIAS");
+		}
 
 		Cell cell = new Cell(name.toString());
 

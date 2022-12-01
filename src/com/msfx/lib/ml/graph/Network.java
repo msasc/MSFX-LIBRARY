@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import com.msfx.lib.util.json.JSONArray;
 import com.msfx.lib.util.json.JSONObject;
 
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * A network or computational graph, made of wired cells of nodes that interface through input and
@@ -35,43 +36,49 @@ import java.util.*;
  */
 public class Network {
 
-	/**
-	 * Master map with all cells in this network.
-	 */
+	/** Master map with all cells in this network. */
 	private final Map<Cell, Cell> cells = new HashMap<>();
 
-	/**
-	 * List of input edges.
-	 */
+	/** List of input edges. */
 	private List<Edge> inputEdges;
-	/**
-	 * List of output edges.
-	 */
+	/** List of output edges. */
 	private List<Edge> outputEdges;
-	/**
-	 * List of layers in forward order.
-	 */
+	/** List of layers in forward order. */
 	private List<List<Node>> layers;
-	/**
-	 * Map with all edges in the network.
-	 */
+	/** Map with all edges in the network. */
 	private Map<Edge, Edge> edges;
+
+	/** Pool used in concurrent executions. */
+	private ForkJoinPool pool;
 
 	/**
 	 * Constructor.
 	 */
-	public Network() { }
+	public Network() {}
 
 	/**
 	 * Add a series of cells.
-	 *
 	 * @param cells The list of cells.
 	 */
-	public void add(Cell... cells) { for (Cell cell : cells) { this.cells.put(cell, cell); } }
+	public void add(Cell... cells) {
+		for (Cell cell : cells) {
+			cell.network = this;
+			this.cells.put(cell, cell);
+		}
+	}
+	/**
+	 * Add a series of cells.
+	 * @param cells The list of cells.
+	 */
+	public void add(List<Cell> cells) {
+		for (Cell cell : cells) {
+			cell.network = this;
+			this.cells.put(cell, cell);
+		}
+	}
 
 	/**
 	 * Launch the backward pass.
-	 *
 	 * @param outputDeltasList List of arrays of output deltas, in the same order as the list of
 	 *                         output edges.
 	 */
@@ -128,21 +135,37 @@ public class Network {
 
 	/**
 	 * Return the list of input edges.
-	 *
 	 * @return The list of input edges.
 	 */
 	public List<Edge> getInputEdges() { return Collections.unmodifiableList(inputEdges); }
 	/**
 	 * Return the list of output edges.
-	 *
 	 * @return The list of output edges.
 	 */
 	public List<Edge> getOutputEdges() { return Collections.unmodifiableList(outputEdges); }
+	/**
+	 * returns a list with the input sizes.
+	 * @return The list with input sizes.
+	 */
+	public List<Integer> getInputSizes() { return getSizes(getInputEdges()); }
+	/**
+	 * returns a list with the output sizes.
+	 * @return The list with output sizes.
+	 */
+	public List<Integer> getOutputSizes() { return getSizes(getOutputEdges()); }
+	/**
+	 * Returns the list of the sizes of the edges.
+	 * @param edges The list of edges.
+	 * @return The list of the sizes of the edges.
+	 */
+	private List<Integer> getSizes(List<Edge> edges) {
+		List<Integer> sizes = new ArrayList<>();
+		for (Edge edge : edges) { sizes.add(edge.size()); }
+		return sizes;
+	}
 
 	/**
-	 * Returns the list of output values of the network, normally required after a <i>forward()</i>
-	 * call.
-	 *
+	 * Returns the list of output values of the network, normally required after a forward() call.
 	 * @return The list of output values.
 	 */
 	public List<double[]> getOutputValues() {
@@ -222,6 +245,36 @@ public class Network {
 	}
 
 	/**
+	 * Terminate the network usage and free resources.
+	 */
+	public void terminate() {
+		if (pool != null) pool.shutdown();
+	}
+
+	/**
+	 * Indicate that processing should be done in parallel.
+	 * @param parallel A boolean.
+	 */
+	public void setParallelProcessing(boolean parallel) {
+		if (pool != null) pool.shutdown();
+		if (parallel) {
+			pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors() * 2);
+		} else {
+			pool = null;
+		}
+	}
+	/**
+	 * Check whether parallel processing should be done when possible.
+	 * @return A boolean.
+	 */
+	public boolean isParallelProcessing() { return pool != null; }
+	/**
+	 * Return the parallel pool.
+	 * @return The pool.
+	 */
+	public ForkJoinPool getPool() { return pool; }
+
+	/**
 	 * Unfold edges.
 	 */
 	public void unfold() {
@@ -248,7 +301,6 @@ public class Network {
 
 	/**
 	 * Restore the network from a JSONObject.
-	 *
 	 * @param net The object.
 	 */
 	public void fromJSONObject(JSONObject net) {
@@ -262,6 +314,7 @@ public class Network {
 			String cell_name = cell_obj.get("name").getString();
 
 			Cell cell = new Cell(UUID.fromString(cell_uuid), cell_name);
+			cell.network = this;
 
 			JSONArray arr_nodes = cell_obj.get("nodes").getArray();
 			for (int j = 0; j < arr_nodes.size(); j++) {
@@ -322,7 +375,6 @@ public class Network {
 
 	/**
 	 * Return a JSON definition of the edge.
-	 *
 	 * @return The JSON definition.
 	 */
 	public JSONObject toJSONObject() {
