@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -69,11 +69,41 @@ public class Files {
 	public static File findFileWithinPathEntries(String fileName, List<String> entries) {
 		/* Check direct. */
 		File file = new File(fileName);
-		if (file.exists()) return file;
+		if (file.exists() && file.isFile()) return file;
 		/* Check path entries. */
 		for (String s : entries) {
 			File entry = new File(s);
 			File check = getFileRecursive(entry, file);
+			if (check != null) return check;
+		}
+		return null;
+	}
+	/**
+	 * Return the directory or null, scanning the current name as a directory, and then the
+	 * available class path entries recursively.
+	 *
+	 * @param dirName The directory name to search.
+	 * @return The directory or null.
+	 */
+	public static File findDirectoryWithinClassPathEntries(String dirName) {
+		return findDirectoryWithinPathEntries(dirName, getClassPathEntries());
+	}
+	/**
+	 * Return the directory or null, scanning the current name as a directory, and then the argument
+	 * list of path entries.
+	 *
+	 * @param dirName The directory name to search.
+	 * @param entries The list of path entries.
+	 * @return
+	 */
+	public static File findDirectoryWithinPathEntries(String dirName, List<String> entries) {
+		/* Check direct. */
+		File file = new File(dirName);
+		if (file.exists() && file.isDirectory()) return file;
+		/* Check path entries. */
+		for (String s : entries) {
+			File entry = new File(s);
+			File check = getDirectoryRecursive(entry, file);
 			if (check != null) return check;
 		}
 		return null;
@@ -98,6 +128,29 @@ public class Files {
 			File[] children = parent.listFiles();
 			for (File child : children) {
 				File check = getFileRecursive(child, file);
+				if (check != null) return check;
+			}
+		}
+		return null;
+	}
+	/**
+	 * Return the directory composed by the parent and child, scanning recursively if the parent is
+	 * a directory.
+	 *
+	 * @param parent The parent, file or directory.
+	 * @param file   The directory to search.
+	 * @return The file or null if not found recursively.
+	 */
+	public static File getDirectoryRecursive(File parent, File file) {
+		if (parent.isDirectory()) {
+			String parentPath = parent.getAbsolutePath();
+			String filePath = file.getPath();
+			if (parentPath.endsWith(filePath)) {
+				return parent;
+			}
+			File[] children = parent.listFiles();
+			for (File child : children) {
+				File check = getDirectoryRecursive(child, file);
 				if (check != null) return check;
 			}
 		}

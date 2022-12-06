@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,6 @@ public class ActivationNode extends Node {
 
 	/**
 	 * Builder to restore from a JSON object with the node definition.
-	 *
 	 * @param obj The JSON object.
 	 * @return The node.
 	 */
@@ -46,31 +45,24 @@ public class ActivationNode extends Node {
 		return node;
 	}
 
-	/**
-	 * Activation function.
-	 */
+	/** Activation function. */
 	private Activation activation;
-	/**
-	 * Flat spot to avoid near zero derivatives.
-	 */
+	/** Flat spot to avoid near zero derivatives. */
 	private double flatSpot = 0.01;
 
 	/**
 	 * Constructor.
-	 *
 	 * @param activation The activation function.
 	 */
 	public ActivationNode(Activation activation) { this.activation = activation; }
 	/**
 	 * Constructor to restore.
-	 *
 	 * @param uuid UUID:
 	 */
-	ActivationNode(UUID uuid) { super(uuid); }
+	private ActivationNode(UUID uuid) { super(uuid); }
 
 	/**
 	 * Add an input edge.
-	 *
 	 * @param edge The edge.
 	 */
 	public void addInputEdge(Edge edge) {
@@ -83,7 +75,6 @@ public class ActivationNode extends Node {
 	}
 	/**
 	 * Add an output edge.
-	 *
 	 * @param edge The edge.
 	 */
 	public void addOutputEdge(Edge edge) {
@@ -102,12 +93,11 @@ public class ActivationNode extends Node {
 	public void backward() {
 		int size = size();
 		double[] triggerDeltas = new double[size];
-		for (int n = 0; n < size; n++) {
-			triggerDeltas[n] = 0;
-			for (int out = 0; out < getOutputEdges().size(); out++) {
-				double[] outputDeltas = getOutputEdges().get(out).getBackwardDeltas();
+		for (Edge edge : getOutputEdges()) {
+			double[] outputDeltas = edge.getBackwardDeltas();
+			for (int n = 0; n < size; n++) {
 				triggerDeltas[n] += outputDeltas[n];
-			}
+			}			
 		}
 
 		// All output edges have the same output values
@@ -117,8 +107,8 @@ public class ActivationNode extends Node {
 			triggerDeltas[n] = triggerDeltas[n] * (derivatives[n] + flatSpot);
 		}
 
-		for (int in = 0; in < getInputEdges().size(); in++) {
-			getInputEdges().get(in).pushBackward(triggerDeltas);
+		for (Edge edge : getInputEdges()) {
+			edge.pushBackward(triggerDeltas);
 		}
 	}
 
@@ -129,28 +119,25 @@ public class ActivationNode extends Node {
 	public void forward() {
 		int size = size();
 		double[] triggerValues = new double[size];
-		for (int n = 0; n < size; n++) {
-			triggerValues[n] = 0;
-			for (int in = 0; in < getInputEdges().size(); in++) {
-				double[] inputValues = getInputEdges().get(in).getForwardValues();
+		for (Edge edge : getInputEdges()) {
+			double[] inputValues = edge.getForwardValues();
+			for (int n = 0; n < size; n++) {
 				triggerValues[n] += inputValues[n];
 			}
 		}
 		double[] outputValues = activation.activations(triggerValues);
-		for (int out = 0; out < getOutputEdges().size(); out++) {
-			getOutputEdges().get(out).pushForward(outputValues);
+		for (Edge edge : getOutputEdges()) {
+			edge.pushForward(outputValues);
 		}
 	}
 
 	/**
 	 * The node is empty if both input and output edges are empty.
-	 *
 	 * @return A boolean.
 	 */
 	public boolean isEmpty() { return getInputEdges().isEmpty() && getOutputEdges().isEmpty(); }
 	/**
 	 * Return the node size, that is, zero if empty, otherwise the size of any of its edges.
-	 *
 	 * @return The size.
 	 */
 	public int size() {

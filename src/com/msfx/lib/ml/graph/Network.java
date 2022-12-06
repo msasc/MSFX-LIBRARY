@@ -16,14 +16,23 @@
 
 package com.msfx.lib.ml.graph;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
+
 import com.msfx.lib.ml.graph.nodes.ActivationNode;
 import com.msfx.lib.ml.graph.nodes.BiasNode;
 import com.msfx.lib.ml.graph.nodes.WeightsNode;
 import com.msfx.lib.util.json.JSONArray;
 import com.msfx.lib.util.json.JSONObject;
-
-import java.util.*;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * A network or computational graph, made of wired cells of nodes that interface through input and
@@ -177,6 +186,20 @@ public class Network {
 	}
 
 	/**
+	 * Return a collection with all network nodes.
+	 * @return The collection of nodes.
+	 */
+	public Collection<Node> getNodes() {
+		Map<Node, Node> nodes = new HashMap<>();
+		for (Cell cell : cells.values()) {
+			for (Node node : cell.getNodes()) {
+				nodes.put(node, node);
+			}
+		}
+		return nodes.values();
+	}
+
+	/**
 	 * Initialize the network. This method must be called after adding all the cells and wires, and
 	 * before the call to the first <i>forward()</i> or <i>backward()</i>.
 	 * <p>
@@ -201,7 +224,7 @@ public class Network {
 		/* List of layers. */
 		layers = new ArrayList<>();
 
-		/* Map of avoid infinite recurrence and working list of edges. */
+		/* Map of nodes avoid infinite recurrence and working list of edges. */
 		Map<Node, Node> processedNodes = new HashMap<>();
 		List<Edge> scanEdges = new ArrayList<>();
 
@@ -263,6 +286,7 @@ public class Network {
 			pool = null;
 		}
 	}
+
 	/**
 	 * Check whether parallel processing should be done when possible.
 	 * @return A boolean.
@@ -351,7 +375,7 @@ public class Network {
 			String uuid = obj.get("uuid").getString();
 			int size = obj.get("size").getNumber().intValue();
 			Edge edge = new Edge(size, UUID.fromString(uuid));
-			if (obj.get("input-node") != null) {
+			if (obj.contains("input-node")) {
 				uuid = obj.get("input-node").getString();
 				Node node = nodes.get(uuid);
 				if (node != null) {
@@ -359,8 +383,8 @@ public class Network {
 					node.getOutputEdges().add(edge);
 				}
 			}
-			if (obj.get("output-node") != null) {
-				uuid = obj.get("otput-node").getString();
+			if (obj.contains("output-node")) {
+				uuid = obj.get("output-node").getString();
 				Node node = nodes.get(uuid);
 				if (node != null) {
 					edge.setOutputNode(node);
@@ -395,5 +419,24 @@ public class Network {
 		net.put("edges", arrEdges);
 
 		return net;
+	}
+
+	/**
+	 * Restore the network.
+	 * @param reader Input reader.
+	 * @throws IOException If such an error occurs.
+	 */
+	public void restore(Reader reader) throws IOException {
+		JSONObject net = JSONObject.parse(reader);
+		fromJSONObject(net);
+	}
+	/**
+	 * Save the network.
+	 * @param writer Output writer.
+	 * @throws IOException If such an error occurs.
+	 */
+	public void save(Writer writer) throws IOException {
+		JSONObject net = toJSONObject();
+		writer.write(net.toString(true));
 	}
 }

@@ -18,6 +18,7 @@
  */
 package com.msfx.lib.ml.training;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,9 @@ import com.msfx.lib.ml.data.Pattern;
 import com.msfx.lib.ml.data.PatternSource;
 import com.msfx.lib.ml.graph.Network;
 import com.msfx.lib.task.TaskProgress;
+import com.msfx.lib.util.Console;
 import com.msfx.lib.util.Numbers;
+import com.msfx.lib.util.Strings;
 import com.msfx.lib.util.Vector;
 
 /**
@@ -49,6 +52,9 @@ public class SLTrainer extends TaskProgress {
 
 	/** Number of epochs or iterations on the train source, default to 100. */
 	private int epochs = 100;
+
+	/** Optional console to output additional information. */
+	private Console console;
 
 	/**
 	 * Constructor setting two levels of progress.
@@ -75,6 +81,11 @@ public class SLTrainer extends TaskProgress {
 	 * @param sourceTrain The train source of patterns.
 	 */
 	public void setSourceTrain(PatternSource sourceTrain) { this.sourceTrain = sourceTrain; }
+	/**
+	 * Set the optional console.
+	 * @param cs The console.
+	 */
+	public void setConsole(Console cs) { this.console = cs; }
 
 	/**
 	 * Execute this trainer task.
@@ -95,15 +106,15 @@ public class SLTrainer extends TaskProgress {
 		/* Total work and work done. */
 		long totalWork = sourceTrain.size() * epochs;
 		long totalDone = 0;
-		
+
 		/* Metrics. */
-		SLMetrics trainMetrics = new SLMetrics("", network.getOutputSizes());
+		SLMetrics trainMetrics = new SLMetrics(network.getOutputSizes());
+		SLMetrics.Track trackPrev = null;
 
 		/* Iterate epochs. */
+		boolean consoleHeader = false;
+		if (console != null) console.clear();
 		for (int epoch = 0; epoch < epochs; epoch++) {
-
-			/* Check cancelled. */
-			if (cancel()) break;
 
 			/* Start the source level. */
 			getMonitor().notifyStart(LEVEL_PATTERN);
@@ -130,14 +141,14 @@ public class SLTrainer extends TaskProgress {
 					networkDeltas.add(n_deltas);
 				}
 				network.backward(networkDeltas);
-				
+
 				/* Calculate train metrics. */
 				trainMetrics.compute(patternOutput, networkOutput);
-				
+
 				/* Notify. */
 				totalDone++;
 				patternDone++;
-				
+
 				StringBuilder epochMsg = new StringBuilder();
 				epochMsg.append("Processing epoch ");
 				epochMsg.append((epoch + 1));
@@ -148,23 +159,79 @@ public class SLTrainer extends TaskProgress {
 				epochMsg.append(" of ");
 				epochMsg.append(totalWork);
 				getMonitor().notifyMessage(LEVEL_EPOCH, epochMsg.toString());
-				
+
 				StringBuilder patternMsg = new StringBuilder();
 				patternMsg.append("Processing pattern ");
 				patternMsg.append(patternDone);
 				patternMsg.append(" of ");
 				patternMsg.append(patternWork);
-				patternMsg.append(", matches ");
-				patternMsg.append(trainMetrics.getMatches());
-				patternMsg.append(" of ");
-				patternMsg.append(trainMetrics.getCalls());
-				patternMsg.append(" (");
-				patternMsg.append(Numbers.getBigDecimal(100 * trainMetrics.getPerformance(), 2).toPlainString());
-				patternMsg.append("%)");
 				getMonitor().notifyMessage(LEVEL_PATTERN, patternMsg.toString());
-				
+
 				getMonitor().notifyProgress(LEVEL_EPOCH, 1, totalWork);
 				getMonitor().notifyProgress(LEVEL_PATTERN, 1, patternWork);
+
+			}
+
+			/* Check cancelled. */
+			if (cancel()) break;
+
+			/* If there is a console, report performance. */
+			if (console != null) {
+
+				SLMetrics.Track track = trainMetrics.getTrack();
+				int matches = track.matches();
+				int calls = track.calls();
+				BigDecimal perf = Numbers.getBigDecimal(100 * track.performance(), 4);
+				BigDecimal errorAvg = Numbers.getBigDecimal(track.errorAvg(), 8);
+
+				String sep = "  ";
+				int padEpoch = Math.max(Integer.toString(epochs).length(), "Epoch".length());
+				int padMatches = Math.max(Integer.toString(calls).length(), "Matches".length());
+				int padCalls = Math.max(Integer.toString(calls).length(), "Calls".length());
+				int padPerf = Math.max(perf.toPlainString().length(), "Perform".length());
+				int padError = Math.max(errorAvg.toPlainString().length(), "Error-Avg".length());
+				int padPerfDif = Math.max(perf.toPlainString().length() + 1, "Perform-Dif".length());
+				int padErrorDif = Math.max(errorAvg.toPlainString().length() + 1, "Error-Dif".length());
+				if (!consoleHeader) {
+					consoleHeader = true;
+					console.print(Strings.leftPad("Epoch", padEpoch));
+					console.print(sep);
+					console.print(Strings.leftPad("Matches", padMatches));
+					console.print(sep);
+					console.print(Strings.leftPad("Calls", padCalls));
+					console.print(sep);
+					console.print(Strings.leftPad("Perform", padPerf));
+					console.print(sep);
+					console.print(Strings.leftPad("Error-Avg", padError));
+					console.print(sep);
+					console.print(Strings.leftPad("Perform-Dif", padPerfDif));
+					console.print(sep);
+					console.print(Strings.leftPad("Error-Dif", padErrorDif));
+					console.println();
+				}
+				console.print(Strings.leftPad(epoch + 1, padEpoch));
+				console.print(sep);
+				console.print(Strings.leftPad(matches, padMatches));
+				console.print(sep);
+				console.print(Strings.leftPad(calls, padCalls));
+				console.print(sep);
+				console.print(Strings.leftPad(perf.toPlainString(), padPerf));
+				console.print(sep);
+				console.print(Strings.leftPad(errorAvg.toPlainString(), padError));
+				if (trackPrev != null) {
+					BigDecimal perfPrev = Numbers.getBigDecimal(100 * trackPrev.performance(), 4);
+					BigDecimal perfDif = perf.subtract(perfPrev);
+					BigDecimal errorPrev = Numbers.getBigDecimal(trackPrev.errorAvg(), 8);
+					BigDecimal errorDif = errorAvg.subtract(errorPrev);
+					console.print(sep);
+					console.print(Strings.leftPad(perfDif.toPlainString(), padPerfDif));
+					console.print(sep);
+					console.print(Strings.leftPad(errorDif.toPlainString(), padErrorDif));
+				}
+				console.println();
+				
+				
+				trackPrev = track;
 			}
 
 			/* End monitor of pattern. */

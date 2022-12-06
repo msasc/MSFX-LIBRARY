@@ -65,7 +65,7 @@ public class PaneProgress {
 	private class TimerReport extends TimerTask {
 		public void run() { Platform.runLater(() -> timerReport()); }
 	}
-	
+
 	/** Thread index. */
 	private static int threadIndex = 0;
 
@@ -103,6 +103,9 @@ public class PaneProgress {
 	/** External execution pool. */
 	private ExecPool pool;
 
+	/** Console. */
+	private TextConsole console;
+
 	/**
 	 * Constructor that creates a progress pane to display the performance of the progress task.
 	 * @param task The progress task.
@@ -113,17 +116,19 @@ public class PaneProgress {
 	 * @param task    The progress task.
 	 * @param padding Padding.
 	 */
-	public PaneProgress(TaskProgress task, double padding) { this(task, 50, padding); }
+	public PaneProgress(TaskProgress task, double padding) { this(task, 50, padding, true); }
 	/**
 	 * Constructor that creates a progress pane to display the performance of the progress task.
 	 * @param task    The progress task.
 	 * @param timeout The timeout to refresh the monitor.
 	 * @param pad     Padding.
+	 * @param console A boolean that indicates whether a text console should be installed.
 	 */
-	public PaneProgress(TaskProgress task, int timeout, double pad) {
+	public PaneProgress(TaskProgress task, int timeout, double pad, boolean console) {
 		this.task = task;
 		this.timeout = timeout;
 		this.pad = pad;
+		if (console) this.console = new TextConsole();
 		layoutComponents();
 	}
 	/**
@@ -131,6 +136,11 @@ public class PaneProgress {
 	 * @return The root grid pane.
 	 */
 	public GridPane getRoot() { return root; }
+	/**
+	 * Return the console.
+	 * @return The console.
+	 */
+	public TextConsole getConsole() { return console; }
 
 	/**
 	 * Set the external execution pool.
@@ -156,7 +166,7 @@ public class PaneProgress {
 		int row = 0;
 
 		/* Two columns, left 75% and right 25%. */
-		
+
 		ColumnConstraints ccLeft = new ColumnConstraints();
 		ccLeft.percentWidthProperty().set(75);
 		ColumnConstraints ccright = new ColumnConstraints();
@@ -164,7 +174,7 @@ public class PaneProgress {
 		root.getColumnConstraints().addAll(ccLeft, ccright);
 
 		/* First row shows the title and the state. */
-		
+
 		String styleTitle = "";
 		styleTitle += " -fx-font-size: 14px;";
 		styleTitle += " -fx-font-weight: bold;";
@@ -194,7 +204,7 @@ public class PaneProgress {
 		for (int i = 0; i < pm.size(); i++) {
 			Level level = new Level();
 			levels.add(level);
-			
+
 			row++;
 
 			/* Message . */
@@ -206,7 +216,7 @@ public class PaneProgress {
 			GridPane.setConstraints(labelMessage, 0, row, 2, 1,
 				HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, new Insets(8, pad, 2, pad));
 			root.getChildren().add(labelMessage);
-			
+
 			row++;
 
 			/* Time progress. */
@@ -227,6 +237,16 @@ public class PaneProgress {
 			root.getChildren().add(level.progress);
 		}
 
+		/* Console. */
+		if (console != null) {
+			row++;
+			console = new TextConsole();
+			console.getControl().styleProperty().set("-fx-font-family: consolas;");
+			GridPane.setConstraints(console.getControl(), 0, row, 2, 1,
+				HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.ALWAYS, new Insets(2, pad, 2, pad));
+			root.getChildren().add(console.getControl());
+		}
+
 		/* Start, cancel and remove buttons. */
 		row++;
 
@@ -234,11 +254,11 @@ public class PaneProgress {
 		buttonCancel = Buttons.cancel(false, false, false);
 		buttonError = Buttons.error(false, false, false);
 		buttonRemove = Buttons.remove(false, false, false);
-		
+
 		ButtonBar buttonBar = new ButtonBar();
 		buttonBar.getButtons().addAll(buttonStart, buttonCancel, buttonError, buttonRemove);
 		GridPane.setConstraints(buttonBar, 0, row, 2, 1,
-			HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, new Insets(8, pad, 2, pad));
+			HPos.LEFT, VPos.CENTER, Priority.NEVER, Priority.NEVER, new Insets(2, pad, 2, pad));
 		root.getChildren().add(buttonBar);
 
 		/* Separator. */
@@ -256,13 +276,14 @@ public class PaneProgress {
 		buttonCancel.disableProperty().set(true);
 		buttonError.disableProperty().set(true);
 		buttonStart.requestFocus();
+
 	}
 
 	/**
 	 * Start the task.
 	 */
 	private void taskStart() {
-		
+
 		timer = new Timer("PROGRESS-TIMER-" + Strings.leftPad(threadIndex, 3, "0"));
 		timerTask = new TimerReport();
 		timer.schedule(timerTask, timeout, timeout);

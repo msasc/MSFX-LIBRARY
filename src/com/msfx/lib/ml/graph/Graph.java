@@ -149,6 +149,7 @@ public class Graph {
 	 * @param activation Activation function.
 	 * @param recurrent  A boolean that indicates whether the cell is recurrent.
 	 * @param bias       A boolean that indicates whether the activation node will use biases.
+	 * @param normalize  A boolean that indicates whether to normalize the activation.
 	 */
 	public static Cell rnn(int inputSize, int outputSize, Activation activation, boolean recurrent, boolean bias) {
 
@@ -186,16 +187,19 @@ public class Graph {
 			cell.putNode(biasNode);
 		}
 
+		/* Output node, by default is the activation node. */
+		Node outputNode = actNode;
+
 		/* Case recurrent weights node required. */
 		if (recurrent) {
 			WeightsNode recwNode = new WeightsNode(outputSize, outputSize);
-			connect(outputSize, actNode, recwNode);
+			connect(outputSize, outputNode, recwNode);
 			connect(outputSize, recwNode, actNode);
 			cell.putNode(recwNode);
 		}
 
 		/* Connect the output edge to the activation node. */
-		connect(outputSize, actNode, null);
+		connect(outputSize, outputNode, null);
 
 		return cell;
 	}

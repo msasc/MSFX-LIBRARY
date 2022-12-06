@@ -31,45 +31,28 @@ import java.time.format.DateTimeParseException;
  */
 public class JSONParser {
 
-	/**
-	 * Enum the kind of token.
-	 */
+	/** Enum the kind of token. */
 	private enum Kind {
-		/**
-		 * End of file/stream.
-		 */
+		/*** End of file/stream.  */
 		EOF,
-		/**
-		 * Structural char.
-		 */
+		/*** Structural char.  */
 		STRUCT,
-		/**
-		 * Value (boolean, string...).
-		 */
+		/*** Value (boolean, string...).  */
 		VALUE
 	}
 
-	/**
-	 * Tokens retrieved by the parser.
-	 */
+	/** Tokens retrieved by the parser. */
 	private static class Token {
 
-		/**
-		 * Kind of token.
-		 */
+		/*** Kind of token.  */
 		private final Kind kind;
-		/**
-		 * Type of the value.
-		 */
+		/*** Type of the value.  */
 		private final JSONTypes type;
-		/**
-		 * Value.
-		 */
+		/*** Value.  */
 		private final Object value;
 
 		/**
 		 * Constructor.
-		 *
 		 * @param kind  Kind of token.
 		 * @param type  Type of the value.
 		 * @param value Value.
@@ -82,7 +65,6 @@ public class JSONParser {
 
 		/**
 		 * Return a string representation.
-		 *
 		 * @return The string representation.
 		 */
 		@Override
@@ -97,18 +79,12 @@ public class JSONParser {
 		}
 	}
 
-	/**
-	 * Format error message.
-	 */
+	/** Format error message. */
 	private static final String FMT_ERR = "Format error";
 
-	/**
-	 * Reader.
-	 */
+	/** Reader. */
 	private Reader reader;
-	/**
-	 * Document to fill with parsed data.
-	 */
+	/** Document to fill with parsed data. */
 	private Token nextToken;
 
 	/**
@@ -118,7 +94,6 @@ public class JSONParser {
 
 	/**
 	 * Parse the source reader and return the result JSON object.
-	 *
 	 * @param r The source reader.
 	 * @return The parsed document.
 	 * @throws IOException If an IO or format error occurs.
@@ -139,7 +114,6 @@ public class JSONParser {
 
 	/**
 	 * Parse and return the incoming JSON object.
-	 *
 	 * @return The parsed document.
 	 * @throws IOException If an error occurs.
 	 */
@@ -199,7 +173,6 @@ public class JSONParser {
 	}
 	/**
 	 * Parse the incoming JSON array.
-	 *
 	 * @return The array.
 	 * @throws IOException If an error occurs.
 	 */
@@ -247,7 +220,6 @@ public class JSONParser {
 	}
 	/**
 	 * Check whether the object is an extended type entry.
-	 *
 	 * @param obj The JSON object.
 	 * @return The extended type entry or null.
 	 */
@@ -336,7 +308,6 @@ public class JSONParser {
 	}
 	/**
 	 * If required reads tokens from the stream and return the next token.
-	 *
 	 * @return The next token.
 	 * @throws IOException If an error occurs.
 	 */
@@ -421,7 +392,7 @@ public class JSONParser {
 			StringBuilder b = new StringBuilder();
 			b.append((char) c);
 			while (true) {
-				c = nextChar(false);
+				c = nextChar(true);
 				if (c <= 32) throw new IOException(FMT_ERR);
 				if ("+-.0123456789eE".indexOf(c) >= 0) {
 					b.append((char) c);

@@ -56,6 +56,7 @@ public class Cell {
 	Cell(UUID uuid, String name) {
 		this.uuid = uuid;
 		this.name = name;
+		this.nodes = new HashMap<>();
 	}
 
 	/**

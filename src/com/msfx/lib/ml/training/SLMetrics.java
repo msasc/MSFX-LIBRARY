@@ -30,21 +30,31 @@ import com.msfx.lib.util.Vector;
  */
 public class SLMetrics {
 
+	public static record Track(
+			/** Number of matches. */
+			int matches,
+			/** Calls to compute. */
+			int calls,
+			/** Average absolute error. */
+			double errorAvg,
+			/** Average absolute error standard deviation. */
+			double errorStd,
+			/** Performance. */
+			double performance) {}
+
 	/** M-Squared vector. */
 	private List<double[]> errors;
 	/** Match function, default is match category. */
 	private Matcher matcher = new CategoryMatcher();
+
+	/** List of lengths of the arrays of pattern and network output. */
+	private int[] lengths;
 
 	/** Number of matches. */
 	private int matches;
 	/** Calls to compute. */
 	private int calls;
 
-	/* List of lengths of the arrays of pattern and network output. */
-	private int[] lengths;
-
-	/** Label. */
-	private String label;
 	/** Average absolute error. */
 	private double errorAvg;
 	/** Average absolute error standard deviation. */
@@ -52,19 +62,16 @@ public class SLMetrics {
 
 	/**
 	 * Constructor.
-	 * @param label   Label to name the series of metrics being processed.
 	 * @param lengths List of lengths of the arrays of pattern and network output.
 	 */
-	public SLMetrics(String label, List<Integer> lengths) { this(label, Numbers.toIntArray(lengths)); }
+	public SLMetrics(List<Integer> lengths) { this(Numbers.toIntArray(lengths)); }
 
 	/**
 	 * Constructor.
-	 * @param label   Label to name the series of metrics being processed.
 	 * @param lengths List of lengths of the arrays of pattern and network output.
 	 */
-	public SLMetrics(String label, int... lengths) {
+	public SLMetrics(int... lengths) {
 		if (lengths == null || lengths.length == 0) throw new IllegalArgumentException();
-		this.label = label;
 		this.lengths = lengths;
 		reset();
 	}
@@ -113,36 +120,12 @@ public class SLMetrics {
 	}
 
 	/**
-	 * Return the average of the error.
-	 * @return The average of the error.
+	 * Returns a track with the current metrics.
+	 * @return The track with the current metrics.
 	 */
-	public double getErrorAvg() { return errorAvg; }
-	/**
-	 * Return the standard deviation of the error.
-	 * @return The standard deviation of the error.
-	 */
-	public double getErrorStd() { return errorStd; }
-	/**
-	 * Return the label.
-	 * @return The label.
-	 */
-	public String getLabel() { return label; }
-	
-	/**
-	 * Return the number of calls.
-	 * @return The number of calls.
-	 */
-	public int getCalls() { return calls; }
-	/**
-	 * Return the number of matches.
-	 * @return The number of matches.
-	 */
-	public int getMatches() { return matches; }
-	
-	public double getPerformance() {
-		double matches = getMatches();
-		double calls = getCalls();
-		return matches / calls;
+	public Track getTrack() {
+		double performance = (calls == 0 ? 0.0 : (double) matches / (double) calls);
+		return new Track(matches, calls, errorAvg, errorStd, performance);
 	}
 
 	/**

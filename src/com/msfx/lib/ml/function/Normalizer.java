@@ -23,30 +23,21 @@ package com.msfx.lib.ml.function;
  */
 public class Normalizer {
 
-	/**
-	 * Data high.
-	 */
+	/** Data high. */
 	private double dataHigh;
-	/**
-	 * Data low.
-	 */
+	/** Data low. */
 	private double dataLow;
-	/**
-	 * Normalized high.
-	 */
+	/** Normalized high. */
 	private double normalizedHigh;
-	/**
-	 * Normalized low.
-	 */
+	/** Normalized low. */
 	private double normalizedLow;
 
 	/**
 	 * Default constructor.
 	 */
-	public Normalizer() { }
+	public Normalizer() {}
 	/**
 	 * Constructor setting the normalized high and low as the data high and low..
-	 *
 	 * @param dataHigh Data high.
 	 * @param dataLow  Data low.
 	 */
@@ -58,7 +49,6 @@ public class Normalizer {
 	}
 	/**
 	 * Constructor.
-	 *
 	 * @param dataHigh       Data high.
 	 * @param dataLow        Data low.
 	 * @param normalizedHigh Normalized high.
@@ -76,55 +66,46 @@ public class Normalizer {
 	}
 	/**
 	 * Return the data high.
-	 *
 	 * @return The data high.
 	 */
 	public double getDataHigh() { return dataHigh; }
 	/**
 	 * Set the data high.
-	 *
 	 * @param dataHigh The data high.
 	 */
 	public void setDataHigh(double dataHigh) { this.dataHigh = dataHigh; }
 	/**
 	 * Return the data low.
-	 *
 	 * @return The data low.
 	 */
 	public double getDataLow() { return dataLow; }
 	/**
 	 * Set the data low.
-	 *
 	 * @param dataLow The data low.
 	 */
 	public void setDataLow(double dataLow) { this.dataLow = dataLow; }
 	/**
 	 * Return the normalized high.
-	 *
 	 * @return The normalized high.
 	 */
 	public double getNormalizedHigh() { return normalizedHigh; }
 	/**
 	 * Set the normalized high.
-	 *
 	 * @param normalizedHigh The normalized high.
 	 */
 	public void setNormalizedHigh(double normalizedHigh) { this.normalizedHigh = normalizedHigh; }
 	/**
 	 * Return the normalized low.
-	 *
 	 * @return The normalized low.
 	 */
 	public double getNormalizedLow() { return normalizedLow; }
 	/**
 	 * Set the normalized low.
-	 *
 	 * @param normalizedLow The normalized low.
 	 */
 	public void setNormalizedLow(double normalizedLow) { this.normalizedLow = normalizedLow; }
 	/**
 	 * Normalize the specified value.
-	 *
 	 * @param value The value to normalize.
 	 * @return The normalized value.
 	 */
@@ -143,7 +124,6 @@ public class Normalizer {
 	}
 	/**
 	 * Denormalize the specified value.
-	 *
 	 * @param value The value to normalize.
 	 * @return The normalized value.
 	 */
